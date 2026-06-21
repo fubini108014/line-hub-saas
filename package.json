@@ -1,0 +1,24 @@
+{
+  "name": "line-hub-saas",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/admin\" \"npm run dev --workspace=apps/liff\"",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev:liff": "npm run dev --workspace=apps/liff",
+    "build": "npm run build --workspaces",
+    "db:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "db:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "db:studio": "prisma studio --schema=./prisma/schema.prisma",
+    "db:seed": "ts-node prisma/seed.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "typescript": "^5.4.0"
+  }
+}

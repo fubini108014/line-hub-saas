@@ -31,6 +31,8 @@ export default function OrdersPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productForm, setProductForm] = useState({ name: '', price: '', categoryName: '' });
   const [loading, setLoading] = useState(true);
+  const [addError, setAddError] = useState('');
+  const [addSuccess, setAddSuccess] = useState('');
 
   const token = () => localStorage.getItem('accessToken');
   const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
@@ -59,22 +61,40 @@ export default function OrdersPage() {
   };
 
   const addProduct = async () => {
-    if (!productForm.name || !productForm.price) return;
-    if (productForm.categoryName) {
-      const catRes = await fetch(`${API}/orders/categories`, {
-        method: 'POST', headers: h(), body: JSON.stringify({ name: productForm.categoryName }),
-      });
-      const cat = await catRes.json();
-      await fetch(`${API}/orders/products`, {
-        method: 'POST', headers: h(), body: JSON.stringify({ name: productForm.name, price: +productForm.price, categoryId: cat.id }),
-      });
-    } else {
-      await fetch(`${API}/orders/products`, {
-        method: 'POST', headers: h(), body: JSON.stringify({ name: productForm.name, price: +productForm.price }),
-      });
+    setAddError('');
+    setAddSuccess('');
+    if (!productForm.name || !productForm.price) {
+      setAddError('請填寫商品名稱與價格');
+      return;
     }
-    setProductForm({ name: '', price: '', categoryName: '' });
-    loadProducts();
+    try {
+      let categoryId: string | undefined;
+      if (productForm.categoryName) {
+        const catRes = await fetch(`${API}/orders/categories`, {
+          method: 'POST', headers: h(), body: JSON.stringify({ name: productForm.categoryName }),
+        });
+        if (!catRes.ok) {
+          const err = await catRes.json().catch(() => ({}));
+          throw new Error(err.message || `分類建立失敗（${catRes.status}）`);
+        }
+        const cat = await catRes.json();
+        categoryId = cat.id;
+      }
+      const body: Record<string, unknown> = { name: productForm.name, price: +productForm.price };
+      if (categoryId) body.categoryId = categoryId;
+      const res = await fetch(`${API}/orders/products`, {
+        method: 'POST', headers: h(), body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `商品新增失敗（${res.status}）`);
+      }
+      setProductForm({ name: '', price: '', categoryName: '' });
+      setAddSuccess('商品已新增');
+      loadProducts();
+    } catch (e: any) {
+      setAddError(e.message || '新增失敗，請稍後再試');
+    }
   };
 
   const toggleProduct = async (p: Product) => {
@@ -135,6 +155,8 @@ export default function OrdersPage() {
               <input style={inp} value={productForm.categoryName} onChange={(e) => setProductForm({ ...productForm, categoryName: e.target.value })} placeholder="分類（選填）" />
             </div>
             <button onClick={addProduct} style={{ ...btn, marginTop: 8 }}>新增</button>
+            {addError && <p style={{ color: '#E74C3C', marginTop: 8, fontSize: 14 }}>⚠️ {addError}</p>}
+            {addSuccess && <p style={{ color: '#2ECC71', marginTop: 8, fontSize: 14 }}>✓ {addSuccess}</p>}
           </div>
           {products.length === 0 ? <p style={{ color: '#aaa' }}>尚無商品</p> :
             products.map((p) => (

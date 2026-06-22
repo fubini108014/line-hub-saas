@@ -9,14 +9,14 @@ export class DrawController {
 
   @UseGuards(JwtAuthGuard)
   @Get('campaigns')
-  findAll(@CurrentMerchant() merchantId: string) {
-    return this.drawService.findCampaigns(merchantId);
+  findAll(@CurrentMerchant() m: { id: string }) {
+    return this.drawService.findCampaigns(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('campaigns')
-  create(@CurrentMerchant() merchantId: string, @Body() body: any) {
-    return this.drawService.createCampaign(merchantId, body);
+  create(@CurrentMerchant() m: { id: string }, @Body() body: any) {
+    return this.drawService.createCampaign(m.id, body);
   }
 
   @UseGuards(JwtAuthGuard)

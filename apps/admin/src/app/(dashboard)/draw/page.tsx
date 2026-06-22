@@ -25,6 +25,7 @@ export default function DrawPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Campaign | null>(null);
   const [entries, setEntries] = useState<any[]>([]);
+  const [createError, setCreateError] = useState('');
 
   const token = () => localStorage.getItem('accessToken');
   const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
@@ -41,18 +42,30 @@ export default function DrawPage() {
   };
 
   const create = async () => {
-    if (!form.title || !form.startAt || !form.endAt || prizes.some((p) => !p.name)) return;
-    await fetch(`${API}/draw/campaigns`, {
-      method: 'POST', headers: h(),
-      body: JSON.stringify({
-        ...form,
-        prizes: prizes.map((p) => ({ name: p.name, probability: +p.probability, totalCount: p.totalCount ? +p.totalCount : null })),
-      }),
-    });
-    setForm({ title: '', description: '', type: 'WHEEL', startAt: '', endAt: '', maxEntriesPerMember: 1 });
-    setPrizes([{ ...INIT_PRIZE }]);
-    setAdding(false);
-    load();
+    setCreateError('');
+    if (!form.title) { setCreateError('請填寫活動名稱'); return; }
+    if (!form.startAt || !form.endAt) { setCreateError('請填寫活動開始與結束時間'); return; }
+    const emptyPrize = prizes.findIndex((p) => !p.name);
+    if (emptyPrize >= 0) { setCreateError(`請填寫第 ${emptyPrize + 1} 個獎品名稱`); return; }
+    try {
+      const res = await fetch(`${API}/draw/campaigns`, {
+        method: 'POST', headers: h(),
+        body: JSON.stringify({
+          ...form,
+          prizes: prizes.map((p) => ({ name: p.name, probability: +p.probability, totalCount: p.totalCount ? +p.totalCount : null })),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `建立失敗（${res.status}）`);
+      }
+      setForm({ title: '', description: '', type: 'WHEEL', startAt: '', endAt: '', maxEntriesPerMember: 1 });
+      setPrizes([{ ...INIT_PRIZE }]);
+      setAdding(false);
+      load();
+    } catch (e: any) {
+      setCreateError(e.message || '建立失敗，請稍後再試');
+    }
   };
 
   const addPrize = () => setPrizes((p) => [...p, { ...INIT_PRIZE }]);
@@ -121,9 +134,10 @@ export default function DrawPage() {
           ))}
           <p style={{ color: '#888', fontSize: 12, marginTop: 4 }}>機率：所有獎品機率之和 ≤ 1，剩餘機率為未中獎</p>
           <button onClick={addPrize} style={{ ...btn, background: '#888', marginBottom: 12 }}>+ 新增獎品</button>
+          {createError && <p style={{ color: '#E74C3C', marginBottom: 8, fontSize: 14 }}>⚠️ {createError}</p>}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={create} style={btn}>建立活動</button>
-            <button onClick={() => setAdding(false)} style={{ ...btn, background: '#888' }}>取消</button>
+            <button onClick={() => { setAdding(false); setCreateError(''); }} style={{ ...btn, background: '#888' }}>取消</button>
           </div>
         </div>
       )}

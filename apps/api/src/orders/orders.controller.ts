@@ -9,26 +9,26 @@ export class OrdersController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@CurrentMerchant() merchantId: string) {
-    return this.ordersService.findOrders(merchantId);
+  findAll(@CurrentMerchant() m: { id: string }) {
+    return this.ordersService.findOrders(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('products')
-  getProducts(@CurrentMerchant() merchantId: string) {
-    return this.ordersService.findAllProducts(merchantId);
+  getProducts(@CurrentMerchant() m: { id: string }) {
+    return this.ordersService.findAllProducts(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('categories')
-  createCategory(@CurrentMerchant() merchantId: string, @Body() body: any) {
-    return this.ordersService.createCategory(merchantId, body);
+  createCategory(@CurrentMerchant() m: { id: string }, @Body() body: any) {
+    return this.ordersService.createCategory(m.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('products')
-  createProduct(@CurrentMerchant() merchantId: string, @Body() body: any) {
-    return this.ordersService.createProduct(merchantId, body);
+  createProduct(@CurrentMerchant() m: { id: string }, @Body() body: any) {
+    return this.ordersService.createProduct(m.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -42,4 +42,5 @@ export class OrdersController {
   updateStatus(@Param('id') id: string, @Body() body: { status: string }) {
     return this.ordersService.updateOrderStatus(id, body.status);
   }
+
 }

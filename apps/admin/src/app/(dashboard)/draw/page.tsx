@@ -30,14 +30,14 @@ export default function DrawPage() {
   const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
 
   const load = () => {
-    fetch(`${API}/draw/campaigns`, { headers: h() }).then((r) => r.json()).then(setCampaigns).finally(() => setLoading(false));
+    fetch(`${API}/draw/campaigns`, { headers: h() }).then((r) => r.json()).then((d) => setCampaigns(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const loadEntries = (c: Campaign) => {
     setSelected(c);
-    fetch(`${API}/draw/campaigns/${c.id}/entries`, { headers: h() }).then((r) => r.json()).then(setEntries);
+    fetch(`${API}/draw/campaigns/${c.id}/entries`, { headers: h() }).then((r) => r.json()).then((d) => setEntries(Array.isArray(d) ? d : []));
   };
 
   const create = async () => {

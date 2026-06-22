@@ -40,6 +40,13 @@ export function App() {
       return;
     }
 
+    // Dev bypass: ?dev=1&uid=<lineUserId> skips LIFF auth entirely
+    if (import.meta.env.DEV && params.get('dev') === '1') {
+      setLineUserId(params.get('uid') ?? 'dev-user-001');
+      setReady(true);
+      return;
+    }
+
     liff
       .init({ liffId })
       .then(() => {

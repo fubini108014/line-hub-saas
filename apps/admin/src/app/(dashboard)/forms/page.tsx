@@ -37,7 +37,7 @@ export default function FormsPage() {
   const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
 
   const load = () => {
-    fetch(`${API}/forms`, { headers: h() }).then((r) => r.json()).then(setForms).finally(() => setLoading(false));
+    fetch(`${API}/forms`, { headers: h() }).then((r) => r.json()).then((d) => setForms(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);

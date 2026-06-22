@@ -28,7 +28,7 @@ export default function ReviewsPage() {
     Promise.all([
       fetch(`${API}/reviews`, { headers: h }).then((r) => r.json()),
       fetch(`${API}/reviews/stats`, { headers: h }).then((r) => r.json()),
-    ]).then(([r, s]) => { setReviews(r); setStats(s); }).finally(() => setLoading(false));
+    ]).then(([r, s]) => { setReviews(Array.isArray(r) ? r : []); setStats(s?.count != null ? s : null); }).finally(() => setLoading(false));
   }, []);
 
   return (
@@ -43,7 +43,7 @@ export default function ReviewsPage() {
           </div>
           <div style={card}>
             <p style={label}>平均分數</p>
-            <p style={value}>{stats.average.toFixed(1)} / 5.0</p>
+            <p style={value}>{(stats.average ?? 0).toFixed(1)} / 5.0</p>
           </div>
         </div>
       )}

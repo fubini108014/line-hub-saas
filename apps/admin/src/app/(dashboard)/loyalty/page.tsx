@@ -15,7 +15,7 @@ export default function LoyaltyPage() {
 
   const load = () => {
     fetch(`${API}/loyalty/programs`, { headers: { Authorization: `Bearer ${token()}` } })
-      .then((r) => r.json()).then(setPrograms).finally(() => setLoading(false));
+      .then((r) => r.json()).then((d) => setPrograms(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);

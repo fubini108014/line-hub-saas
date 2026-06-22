@@ -35,8 +35,8 @@ export default function OrdersPage() {
   const token = () => localStorage.getItem('accessToken');
   const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
 
-  const loadOrders = () => fetch(`${API}/orders`, { headers: h() }).then((r) => r.json()).then(setOrders);
-  const loadProducts = () => fetch(`${API}/orders/products`, { headers: h() }).then((r) => r.json()).then(setProducts);
+  const loadOrders = () => fetch(`${API}/orders`, { headers: h() }).then((r) => r.json()).then((d) => setOrders(Array.isArray(d) ? d : []));
+  const loadProducts = () => fetch(`${API}/orders/products`, { headers: h() }).then((r) => r.json()).then((d) => setProducts(Array.isArray(d) ? d : []));
 
   useEffect(() => {
     Promise.all([loadOrders(), loadProducts()]).finally(() => setLoading(false));

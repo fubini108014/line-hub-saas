@@ -28,7 +28,7 @@ export default function CouponsPage() {
   const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
 
   const load = () => {
-    fetch(`${API}/coupons`, { headers: h() }).then((r) => r.json()).then(setCoupons).finally(() => setLoading(false));
+    fetch(`${API}/coupons`, { headers: h() }).then((r) => r.json()).then((d) => setCoupons(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);

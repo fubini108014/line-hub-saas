@@ -26,26 +26,53 @@ export function StepService({ merchantId, onSelect }: Props) {
       .finally(() => setLoading(false));
   }, [selectedService]);
 
-  if (loading) return <p style={{ padding: 24, color: '#888', textAlign: 'center' }}>載入中...</p>;
+  if (loading) {
+    return (
+      <p style={{
+        padding: 24,
+        color: '#94A3B8',
+        textAlign: 'center',
+        fontFamily: "'Plus Jakarta Sans', -apple-system, 'PingFang TC', sans-serif",
+        fontSize: 15,
+      }}>
+        載入中...
+      </p>
+    );
+  }
 
   return (
-    <div style={{ padding: 16 }}>
-      <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>選擇服務項目</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', -apple-system, 'PingFang TC', sans-serif" }}>
+      <p style={{
+        margin: '20px 0 10px',
+        padding: '0 16px',
+        fontSize: 13,
+        fontWeight: 600,
+        color: '#64748B',
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+      }}>
+        選擇服務項目
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px', marginBottom: 24 }}>
         {services.map((s) => (
           <button
             key={s.id}
             onClick={() => { setSelectedService(s); setStaff([]); }}
             style={{
-              padding: '12px 16px', borderRadius: 8, border: '2px solid',
-              borderColor: selectedService?.id === s.id ? '#27ACB2' : '#e0e0e0',
-              background: selectedService?.id === s.id ? '#f0fafa' : '#fff',
-              textAlign: 'left', cursor: 'pointer',
+              width: '100%',
+              borderRadius: 14,
+              border: `1.5px solid ${selectedService?.id === s.id ? '#7C3AED' : '#E2E8F0'}`,
+              background: selectedService?.id === s.id ? '#EDE9FE' : '#FFFFFF',
+              padding: '14px 16px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'border-color 0.15s, background 0.15s',
             }}
           >
-            <div style={{ fontWeight: 'bold', fontSize: 15 }}>{s.name}</div>
-            <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-              ${Number(s.price).toLocaleString()} · {s.durationMinutes} 分鐘
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A' }}>{s.name}</div>
+            <div style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>
+              NT${Number(s.price).toLocaleString()} · {s.durationMinutes} 分鐘
             </div>
           </button>
         ))}
@@ -53,28 +80,57 @@ export function StepService({ merchantId, onSelect }: Props) {
 
       {selectedService && staff.length > 0 && (
         <>
-          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>選擇服務人員</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{
+            margin: '0 0 10px',
+            padding: '0 16px',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#64748B',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+          }}>
+            選擇服務人員
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
             {staff.map((s) => (
               <button
                 key={s.id}
                 onClick={() => onSelect(selectedService, s)}
                 style={{
-                  padding: '12px 16px', borderRadius: 8, border: '2px solid #e0e0e0',
-                  background: '#fff', textAlign: 'left', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 12,
+                  width: '100%',
+                  borderRadius: 14,
+                  border: '1.5px solid #E2E8F0',
+                  background: '#FFFFFF',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  transition: 'border-color 0.15s',
                 }}
               >
                 <div style={{
-                  width: 40, height: 40, borderRadius: '50%', background: '#27ACB2',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontWeight: 'bold', fontSize: 18, flexShrink: 0,
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: '#EDE9FE',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#7C3AED',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  flexShrink: 0,
                 }}>
                   {s.name[0]}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 'bold' }}>{s.name}</div>
-                  {s.specialty && <div style={{ fontSize: 13, color: '#888' }}>{s.specialty}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>{s.name}</div>
+                  {s.specialty && (
+                    <div style={{ fontSize: 13, color: '#64748B' }}>{s.specialty}</div>
+                  )}
                 </div>
               </button>
             ))}

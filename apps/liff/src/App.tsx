@@ -10,6 +10,7 @@ import { FormFiller } from './components/FormFiller';
 import { OrderWizard } from './components/OrderWizard';
 import { LuckyDraw } from './components/LuckyDraw';
 import { LoadingScreen } from './components/LoadingScreen';
+import { SitemapPage } from './components/SitemapPage';
 
 const LIFF_TYPE_MAP: Record<string, string> = {
   booking: 'booking',
@@ -31,6 +32,11 @@ export function App() {
   const params = new URLSearchParams(window.location.search);
   const merchantId = params.get('mid') ?? '';
   const type = LIFF_TYPE_MAP[params.get('type') ?? 'booking'] ?? 'booking';
+
+  // Show sitemap when explicitly requested or no mid in dev mode
+  if (params.get('type') === 'sitemap' || (import.meta.env.DEV && !merchantId)) {
+    return <SitemapPage />;
+  }
   const extra = params.get('extra') ?? '';
   const liffId = import.meta.env.VITE_LIFF_ID as string;
 

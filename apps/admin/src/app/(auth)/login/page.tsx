@@ -3,6 +3,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
+const HubIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+  </svg>
+);
+
+const FEATURES = [
+  '預約管理・集點卡・優惠券',
+  '候位系統・問卷表單・點餐',
+  '一站串接 LINE 官方帳號',
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -11,46 +24,88 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
       const res = await api.post<{ accessToken: string; merchantId: string }>('/auth/login', form);
       localStorage.setItem('accessToken', res.accessToken);
       router.push('/dashboard');
     } catch (e: any) {
-      setError(e.message ?? '登入失敗');
+      setError(e.message ?? '帳號或密碼不正確，請再試一次');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
-      <div style={{ background: '#fff', padding: 40, borderRadius: 12, width: '100%', maxWidth: 400, boxShadow: '0 2px 16px rgba(0,0,0,0.08)' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 24 }}>商家登入</h1>
-        <p style={{ margin: '0 0 28px', color: '#888', fontSize: 14 }}>LINE Hub 管理後台</p>
+    <div className="auth-shell">
+      {/* Left: Brand panel */}
+      <div className="auth-brand-panel">
+        <div className="auth-brand-content">
+          <div className="auth-brand-logo">
+            <HubIcon />
+          </div>
+          <div className="auth-brand-title">LINE Hub</div>
+          <div className="auth-brand-desc">
+            為台灣商家打造的 LINE OA 模組化管理平台
+          </div>
+          <div className="auth-features">
+            {FEATURES.map((f) => (
+              <div key={f} className="auth-feature-item">
+                <span className="auth-feature-dot" />
+                <span className="auth-feature-text">{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>Email</label>
-            <input type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} />
+      {/* Right: Form panel */}
+      <div className="auth-form-panel">
+        <div className="auth-form-box">
+          <div className="auth-form-header">
+            <h1 className="auth-form-title">商家登入</h1>
+            <p className="auth-form-subtitle">歡迎回來，請輸入您的帳號資訊</p>
           </div>
-          <div>
-            <label style={labelStyle}>密碼</label>
-            <input type="password" required value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} style={inputStyle} />
-          </div>
-          {error && <p style={{ color: '#E74C3C', fontSize: 14, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={loading} style={btnStyle}>
-            {loading ? '登入中...' : '登入'}
-          </button>
-        </form>
-        <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14, color: '#888' }}>
-          還沒有帳號？<a href="/register" style={{ color: '#27ACB2' }}>立即註冊</a>
-        </p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="auth-form-fields">
+              <div className="form-group">
+                <label className="form-label">電子郵件</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">密碼</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  className="form-input"
+                />
+              </div>
+              {error && <div className="auth-error">{error}</div>}
+            </div>
+
+            <button type="submit" disabled={loading} className="auth-submit-btn">
+              {loading ? '登入中...' : '登入'}
+            </button>
+          </form>
+
+          <p className="auth-footer-text">
+            還沒有帳號？{' '}
+            <a href="/register" style={{ fontWeight: 600 }}>立即免費註冊</a>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
-
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 14, marginBottom: 6, color: '#555' };
-const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15, boxSizing: 'border-box' };
-const btnStyle: React.CSSProperties = { padding: '12px', borderRadius: 8, border: 'none', background: '#27ACB2', color: '#fff', fontSize: 16, fontWeight: 'bold', cursor: 'pointer' };

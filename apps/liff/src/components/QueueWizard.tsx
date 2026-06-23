@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 const BASE = import.meta.env.VITE_API_URL as string;
+const FONT = "'Plus Jakarta Sans', -apple-system, 'PingFang TC', sans-serif";
 
 interface QueueStatus {
   entry: { queueNumber: number; status: string; customerName: string };
@@ -14,9 +15,10 @@ export function QueueWizard({ merchantId, lineUserId }: { merchantId: string; li
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [partySize, setPartySize] = useState(1);
-  const [step, setStep] = useState<'check' | 'form' | 'waiting'>('check');
+  const [step, setStep] = useState<'check' | 'form' | 'confirm' | 'waiting'>('check');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [joining, setJoining] = useState(false);
 
   const loadStatus = () => {
     fetch(`${BASE}/public/queue/status?merchantId=${merchantId}&lineUserId=${lineUserId}`)
@@ -33,8 +35,7 @@ export function QueueWizard({ merchantId, lineUserId }: { merchantId: string; li
   useEffect(() => { loadStatus(); }, []);
 
   const join = async () => {
-    if (!name.trim() || !phone.trim()) { setError('請填寫姓名與電話'); return; }
-    if (!/^09\d{8}$/.test(phone)) { setError('電話格式不正確（09xxxxxxxx）'); return; }
+    setJoining(true);
     setError('');
     try {
       const res = await fetch(`${BASE}/public/queue/join`, {
@@ -50,80 +51,259 @@ export function QueueWizard({ merchantId, lineUserId }: { merchantId: string; li
       setStep('waiting');
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setJoining(false);
     }
   };
 
-  if (loading) return <div style={styles.center}>載入中...</div>;
+  const proceedToConfirm = () => {
+    if (!name.trim() || !phone.trim()) { setError('請填寫姓名與電話'); return; }
+    if (!/^09\d{8}$/.test(phone)) { setError('電話格式不正確（09xxxxxxxx）'); return; }
+    setError('');
+    setStep('confirm');
+  };
 
+  const estWait = status ? status.aheadCount * 10 : 0;
+
+  // ── Loading ──
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT }}>
+        <p style={{ color: '#94A3B8', fontSize: 15 }}>載入中...</p>
+      </div>
+    );
+  }
+
+  // ── Waiting / Success ──
   if (step === 'waiting' && status) {
     return (
-      <div style={styles.wrap}>
-        <h2 style={styles.title}>候位號碼</h2>
-        <div style={styles.numberBox}>
-          <p style={styles.numberLabel}>您的號碼</p>
-          <p style={styles.number}>{status.entry.queueNumber}</p>
-          <p style={styles.ahead}>前方還有 <b>{status.aheadCount}</b> 組</p>
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFFFFF', borderBottom: '1px solid #EDF0F7', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#0F172A' }}>候位管理</span>
         </div>
-        {status.entry.status === 'CALLED' && (
-          <div style={styles.callBanner}>🔔 輪到您了！請前往服務台</div>
-        )}
-        <button onClick={loadStatus} style={styles.refreshBtn}>重新整理</button>
+
+        <div style={{ flex: 1, padding: '32px 16px 120px', maxWidth: 460, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          {status.entry.status === 'CALLED' && (
+            <div style={{ background: '#D1FAE5', border: '1.5px solid #10B981', borderRadius: 14, padding: '14px 16px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 22 }}>🔔</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#065F46' }}>輪到您了！請前往服務台</span>
+            </div>
+          )}
+
+          {/* Queue number circle */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+            <p style={{ fontSize: 13, color: '#64748B', marginBottom: 16, fontWeight: 500 }}>您的候位號碼</p>
+            <div style={{
+              width: 120, height: 120, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 24px rgba(124,58,237,0.3)',
+            }}>
+              <span style={{ fontSize: 48, fontWeight: 900, color: '#FFFFFF', lineHeight: 1 }}>{status.entry.queueNumber}</span>
+            </div>
+          </div>
+
+          {/* Info card */}
+          <div style={{ background: '#FFFFFF', borderRadius: 16, border: '1px solid #EDF0F7', boxShadow: '0 2px 8px rgba(15,23,42,0.06)', padding: '20px 24px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14, borderBottom: '1px solid #EDF0F7', marginBottom: 14 }}>
+              <span style={{ fontSize: 14, color: '#64748B' }}>前方等待</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#0F172A' }}>{status.aheadCount} 組</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14, color: '#64748B' }}>預估等待</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#7C3AED' }}>{estWait} 分鐘</span>
+            </div>
+          </div>
+
+          <button
+            onClick={loadStatus}
+            style={{ width: '100%', height: 48, background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: 14, fontSize: 15, fontWeight: 600, color: '#334155', cursor: 'pointer', fontFamily: FONT }}
+          >
+            重新整理
+          </button>
+        </div>
       </div>
     );
   }
 
+  // ── Session closed ──
   if (!sessionOpen) {
     return (
-      <div style={styles.center}>
-        <p style={{ fontSize: 48 }}>🚫</p>
-        <p style={{ color: '#888' }}>今日候位尚未開放</p>
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFFFFF', borderBottom: '1px solid #EDF0F7', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#0F172A' }}>候位管理</span>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🚫</div>
+          <p style={{ fontSize: 17, fontWeight: 600, color: '#0F172A', marginBottom: 8 }}>今日候位尚未開放</p>
+          <p style={{ fontSize: 14, color: '#94A3B8', textAlign: 'center' }}>請稍後再試，或洽詢現場人員</p>
+        </div>
       </div>
     );
   }
 
+  // ── Step: check (landing) ──
   if (step === 'check') {
     return (
-      <div style={styles.wrap}>
-        <h2 style={styles.title}>現場候位</h2>
-        <p style={{ textAlign: 'center', color: '#888', marginBottom: 24 }}>立即加入候位名單，輪到您時自動通知</p>
-        <button onClick={() => setStep('form')} style={styles.btn}>立即取號</button>
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFFFFF', borderBottom: '1px solid #EDF0F7', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#0F172A' }}>候位管理</span>
+        </div>
+        <div style={{ flex: 1, padding: '32px 16px 120px', maxWidth: 460, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: 16, border: '1px solid #EDF0F7', boxShadow: '0 2px 8px rgba(15,23,42,0.06)', padding: '24px', marginBottom: 16 }}>
+            <p style={{ fontSize: 15, color: '#64748B', textAlign: 'center', margin: 0 }}>立即加入候位名單，輪到您時自動通知</p>
+          </div>
+        </div>
+        <div style={{ position: 'sticky', bottom: 0, background: '#FFFFFF', borderTop: '1px solid #EDF0F7', padding: '12px 16px' }}>
+          <div style={{ maxWidth: 460, margin: '0 auto' }}>
+            <button
+              onClick={() => setStep('form')}
+              style={{ width: '100%', height: 52, background: '#7C3AED', color: '#FFFFFF', border: 'none', borderRadius: 14, fontSize: 15.5, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}
+            >
+              立即取號
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div style={styles.wrap}>
-      <h2 style={styles.title}>填寫資料</h2>
-      <label style={styles.label}>姓名</label>
-      <input style={styles.input} value={name} onChange={(e) => setName(e.target.value)} placeholder="您的姓名" />
-      <label style={styles.label}>電話</label>
-      <input style={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09xxxxxxxx" />
-      <label style={styles.label}>人數</label>
-      <div style={styles.counter}>
-        <button style={styles.countBtn} onClick={() => setPartySize(Math.max(1, partySize - 1))}>－</button>
-        <span style={styles.countNum}>{partySize}</span>
-        <button style={styles.countBtn} onClick={() => setPartySize(Math.min(20, partySize + 1))}>＋</button>
-      </div>
-      {error && <p style={{ color: '#E74C3C', fontSize: 14 }}>{error}</p>}
-      <button onClick={join} style={styles.btn}>確認取號</button>
-    </div>
-  );
-}
+  // ── Step: form ──
+  if (step === 'form') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFFFFF', borderBottom: '1px solid #EDF0F7', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#0F172A' }}>候位管理</span>
+        </div>
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { padding: 24, maxWidth: 400, margin: '0 auto', fontFamily: 'sans-serif' },
-  center: { padding: 60, textAlign: 'center', fontFamily: 'sans-serif' },
-  title: { textAlign: 'center', color: '#27ACB2', marginBottom: 20 },
-  numberBox: { background: '#fff', borderRadius: 20, padding: 32, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', marginBottom: 20 },
-  numberLabel: { color: '#888', marginBottom: 8 },
-  number: { fontSize: 80, fontWeight: 900, color: '#27ACB2', margin: '0 0 8px' },
-  ahead: { color: '#555', fontSize: 18 },
-  callBanner: { background: '#FFC107', borderRadius: 12, padding: 16, textAlign: 'center', fontWeight: 700, marginBottom: 16 },
-  refreshBtn: { display: 'block', width: '100%', padding: 12, background: '#f0f0f0', border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer' },
-  label: { display: 'block', color: '#555', fontSize: 14, marginBottom: 4, marginTop: 12 },
-  input: { width: '100%', padding: 12, borderRadius: 10, border: '1px solid #ddd', fontSize: 16, boxSizing: 'border-box' },
-  counter: { display: 'flex', alignItems: 'center', gap: 20, marginTop: 8 },
-  countBtn: { width: 40, height: 40, borderRadius: '50%', border: '2px solid #27ACB2', background: '#fff', color: '#27ACB2', fontSize: 20, cursor: 'pointer' },
-  countNum: { fontSize: 24, fontWeight: 700, minWidth: 40, textAlign: 'center' },
-  btn: { display: 'block', width: '100%', marginTop: 24, padding: 14, background: '#27ACB2', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, cursor: 'pointer', fontWeight: 700 },
-};
+        <div style={{ flex: 1, padding: '24px 16px 120px', maxWidth: 460, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          {/* Info card */}
+          <div style={{ background: '#EDE9FE', borderRadius: 14, padding: '16px 20px', marginBottom: 24, display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600, marginBottom: 4 }}>目前候位</p>
+              <p style={{ fontSize: 22, fontWeight: 800, color: '#7C3AED', margin: 0 }}>—</p>
+            </div>
+            <div style={{ width: 1, background: '#C4B5FD' }} />
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 12, color: '#7C3AED', fontWeight: 600, marginBottom: 4 }}>預估等待</p>
+              <p style={{ fontSize: 22, fontWeight: 800, color: '#7C3AED', margin: 0 }}>— 分</p>
+            </div>
+          </div>
+
+          {/* Name */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+              姓名 <span style={{ color: '#EF4444' }}>*</span>
+            </label>
+            <input
+              style={{ width: '100%', height: 48, padding: '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 15, color: '#0F172A', background: '#FFFFFF', boxSizing: 'border-box', fontFamily: FONT, outline: 'none' }}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="您的姓名"
+            />
+          </div>
+
+          {/* Phone */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+              電話 <span style={{ color: '#EF4444' }}>*</span>
+            </label>
+            <input
+              style={{ width: '100%', height: 48, padding: '0 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 15, color: '#0F172A', background: '#FFFFFF', boxSizing: 'border-box', fontFamily: FONT, outline: 'none' }}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="09xxxxxxxx"
+              inputMode="tel"
+            />
+          </div>
+
+          {/* Party size */}
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10 }}>人數</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <button
+                style={{ width: 44, height: 44, borderRadius: '50%', border: '1.5px solid #E2E8F0', background: '#FFFFFF', color: '#334155', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}
+                onClick={() => setPartySize(Math.max(1, partySize - 1))}
+              >－</button>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#0F172A', minWidth: 32, textAlign: 'center' }}>{partySize}</span>
+              <button
+                style={{ width: 44, height: 44, borderRadius: '50%', border: '1.5px solid #7C3AED', background: '#EDE9FE', color: '#7C3AED', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}
+                onClick={() => setPartySize(Math.min(20, partySize + 1))}
+              >＋</button>
+            </div>
+          </div>
+
+          {error && (
+            <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 10, padding: '10px 14px', marginTop: 12 }}>
+              <p style={{ fontSize: 13, color: '#B91C1C', margin: 0 }}>{error}</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ position: 'sticky', bottom: 0, background: '#FFFFFF', borderTop: '1px solid #EDF0F7', padding: '12px 16px' }}>
+          <div style={{ maxWidth: 460, margin: '0 auto' }}>
+            <button
+              onClick={proceedToConfirm}
+              style={{ width: '100%', height: 52, background: '#7C3AED', color: '#FFFFFF', border: 'none', borderRadius: 14, fontSize: 15.5, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}
+            >
+              加入候位
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step: confirm ──
+  if (step === 'confirm') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#FFFFFF', borderBottom: '1px solid #EDF0F7', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#0F172A' }}>確認候位資訊</span>
+        </div>
+
+        <div style={{ flex: 1, padding: '24px 16px 120px', maxWidth: 460, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: 16, border: '1px solid #EDF0F7', boxShadow: '0 2px 8px rgba(15,23,42,0.06)', overflow: 'hidden', marginBottom: 16 }}>
+            {[
+              { label: '姓名', value: name },
+              { label: '電話', value: phone },
+              { label: '人數', value: `${partySize} 人` },
+            ].map((row, i, arr) => (
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: i < arr.length - 1 ? '1px solid #EDF0F7' : 'none' }}>
+                <span style={{ fontSize: 14, color: '#64748B' }}>{row.label}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#0F172A' }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 10, padding: '10px 14px', marginTop: 4 }}>
+              <p style={{ fontSize: 13, color: '#B91C1C', margin: 0 }}>{error}</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ position: 'sticky', bottom: 0, background: '#FFFFFF', borderTop: '1px solid #EDF0F7', padding: '12px 16px' }}>
+          <div style={{ maxWidth: 460, margin: '0 auto', display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => setStep('form')}
+              style={{ flex: 1, height: 52, background: '#FFFFFF', color: '#334155', border: '1.5px solid #E2E8F0', borderRadius: 14, fontSize: 15.5, fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}
+            >
+              返回修改
+            </button>
+            <button
+              onClick={join}
+              disabled={joining}
+              style={{ flex: 2, height: 52, background: joining ? '#A78BFA' : '#7C3AED', color: '#FFFFFF', border: 'none', borderRadius: 14, fontSize: 15.5, fontWeight: 700, cursor: joining ? 'not-allowed' : 'pointer', fontFamily: FONT }}
+            >
+              {joining ? '加入中...' : '確認加入'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}

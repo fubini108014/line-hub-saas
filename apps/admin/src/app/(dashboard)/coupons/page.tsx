@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface Coupon {
   id: string;
@@ -23,37 +22,36 @@ export default function CouponsPage() {
   const [form, setForm] = useState<any>(INIT);
   const [adding, setAdding] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  const token = () => localStorage.getItem('accessToken');
-  const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
+  const [error, setError] = useState('');
 
   const load = () => {
-    fetch(`${API}/coupons`, { headers: h() }).then((r) => r.json()).then((d) => setCoupons(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+    setLoading(true);
+    api.get<Coupon[]>('/coupons').then(setCoupons).catch(() => setCoupons([])).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const create = async () => {
     if (!form.title || !form.validFrom || !form.validUntil) return;
-    await fetch(`${API}/coupons`, {
-      method: 'POST', headers: h(),
-      body: JSON.stringify({
+    setError('');
+    try {
+      await api.post('/coupons', {
         ...form,
+        description: form.description || undefined,
         discountValue: +form.discountValue,
         totalLimit: form.totalLimit ? +form.totalLimit : null,
         perMemberLimit: 1,
-      }),
-    });
-    setForm(INIT);
-    setAdding(false);
-    load();
+      });
+      setForm(INIT);
+      setAdding(false);
+      load();
+    } catch (e: any) {
+      setError(e.message ?? '新增失敗');
+    }
   };
 
   const toggle = async (c: Coupon) => {
-    await fetch(`${API}/coupons/${c.id}`, {
-      method: 'PATCH', headers: h(),
-      body: JSON.stringify({ isActive: !c.isActive }),
-    });
+    await api.patch(`/coupons/${c.id}`, { isActive: !c.isActive });
     load();
   };
 
@@ -103,9 +101,10 @@ export default function CouponsPage() {
               <input style={inp} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="使用條件、注意事項..." />
             </div>
           </div>
+          {error && <p style={{ color: '#E74C3C', marginTop: 8 }}>{error}</p>}
           <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
             <button onClick={create} style={btn}>儲存</button>
-            <button onClick={() => setAdding(false)} style={{ ...btn, background: '#888' }}>取消</button>
+            <button onClick={() => { setAdding(false); setError(''); }} style={{ ...btn, background: '#888' }}>取消</button>
           </div>
         </div>
       )}

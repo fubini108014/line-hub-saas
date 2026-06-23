@@ -11,7 +11,7 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
-async function post(path: string, body: any) {
+async function post(path: string, body: unknown) {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -24,12 +24,15 @@ async function post(path: string, body: any) {
   return res.json();
 }
 
+const FONT = "'Plus Jakarta Sans', -apple-system, 'PingFang TC', sans-serif";
+
 export function LoyaltyCard({ merchantId, lineUserId }: { merchantId: string; lineUserId: string }) {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [selected, setSelected] = useState<Program | null>(null);
   const [card, setCard] = useState<Card | null>(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+  const [msgType, setMsgType] = useState<'success' | 'error'>('success');
 
   useEffect(() => {
     get<Program[]>(`/public/loyalty/programs?merchantId=${merchantId}`)
@@ -52,80 +55,211 @@ export function LoyaltyCard({ merchantId, lineUserId }: { merchantId: string; li
     try {
       await post('/loyalty/redeem', { lineUserId, programId: selected.id });
       setMsg('已成功兌換獎勵！');
+      setMsgType('success');
       const updated = await get<Card>(`/public/loyalty/card?merchantId=${merchantId}&lineUserId=${lineUserId}&programId=${selected.id}`);
       setCard(updated);
-    } catch (e: any) {
-      setMsg(e.message);
+    } catch (e: unknown) {
+      setMsg((e as Error).message);
+      setMsgType('error');
     }
   };
 
-  if (loading) return <div style={styles.center}>載入中...</div>;
-  if (programs.length === 0) return <div style={styles.center}>目前無集點活動</div>;
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: '#94A3B8', fontSize: 14 }}>載入中...</span>
+      </div>
+    );
+  }
+
+  if (programs.length === 0) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: '#94A3B8', fontSize: 14 }}>目前無集點活動</span>
+      </div>
+    );
+  }
 
   const prog = selected!;
   const stamps = card?.stamps ?? 0;
   const required = prog.stampsRequired;
   const pct = Math.min((stamps / required) * 100, 100);
+  const totalRows = Math.ceil(required / 10);
+  const stampsPerRow = Math.ceil(required / totalRows);
 
   return (
-    <div style={styles.wrap}>
-      <h2 style={styles.title}>集點卡</h2>
+    <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: FONT }}>
+      {/* Sticky header */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        height: 56,
+        background: '#FFFFFF',
+        borderBottom: '1px solid #E2E8F0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <span style={{ fontSize: 16, fontWeight: 700, color: '#0F172A' }}>集點卡</span>
+      </div>
 
-      {programs.length > 1 && (
-        <div style={styles.tabs}>
-          {programs.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setSelected(p)}
-              style={{ ...styles.tab, ...(p.id === selected?.id ? styles.tabActive : {}) }}
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Content */}
+      <div style={{ maxWidth: 460, margin: '0 auto', padding: 16 }}>
 
-      <div style={styles.card}>
-        <p style={styles.progName}>{prog.name}</p>
-        <div style={styles.stampsRow}>
-          {Array.from({ length: required }).map((_, i) => (
-            <div key={i} style={{ ...styles.stamp, ...(i < stamps ? styles.stampFilled : {}) }}>
-              {i < stamps ? '★' : '☆'}
-            </div>
-          ))}
-        </div>
-        <div style={styles.bar}>
-          <div style={{ ...styles.barFill, width: `${pct}%` }} />
-        </div>
-        <p style={styles.stampCount}>{stamps} / {required} 點</p>
-        <p style={styles.reward}>兌換獎勵：{prog.rewardDescription}</p>
-        <p style={styles.total}>累計獲得：{card?.totalEarned ?? 0} 點</p>
-
-        {stamps >= required && (
-          <button onClick={handleRedeem} style={styles.btn}>立即兌換獎勵</button>
+        {/* Program tabs */}
+        {programs.length > 1 && (
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+            {programs.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p)}
+                style={{
+                  flex: 1,
+                  height: 38,
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: p.id === selected?.id ? 'none' : '1px solid #E2E8F0',
+                  background: p.id === selected?.id ? '#7C3AED' : '#FFFFFF',
+                  color: p.id === selected?.id ? '#FFFFFF' : '#64748B',
+                  fontFamily: FONT,
+                  transition: 'all 0.2s',
+                }}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
         )}
-        {msg && <p style={{ marginTop: 12, color: '#27ACB2', textAlign: 'center' }}>{msg}</p>}
+
+        {/* Main loyalty card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #7C3AED 0%, #0EA5E9 100%)',
+          borderRadius: 20,
+          padding: 24,
+          color: '#FFFFFF',
+          marginBottom: 16,
+        }}>
+          {/* Program name */}
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#FFFFFF', marginBottom: 4 }}>
+            {prog.name}
+          </div>
+
+          {/* Stamps progress text */}
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 12 }}>
+            {stamps} / {required} 點
+          </div>
+
+          {/* Progress bar */}
+          <div style={{
+            height: 8,
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: 4,
+            overflow: 'hidden',
+            margin: '0 0 16px 0',
+          }}>
+            <div style={{
+              height: '100%',
+              background: '#FFFFFF',
+              borderRadius: 4,
+              width: `${pct}%`,
+              transition: 'width 0.5s',
+            }} />
+          </div>
+
+          {/* Stamps grid */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-start' }}>
+            {Array.from({ length: required }).map((_, i) => {
+              const filled = i < stamps;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    width: `calc((100% - ${(stampsPerRow - 1) * 6}px) / ${stampsPerRow})`,
+                    maxWidth: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 16,
+                    background: filled ? '#FFFFFF' : 'rgba(255,255,255,0.2)',
+                    color: filled ? '#7C3AED' : 'rgba(255,255,255,0.5)',
+                    boxShadow: filled ? '0 2px 6px rgba(0,0,0,0.2)' : 'none',
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}
+                >
+                  {filled ? '★' : '☆'}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Reward info card */}
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: 14,
+          padding: '14px 16px',
+          border: '1px solid #EDF0F7',
+          marginBottom: 16,
+        }}>
+          <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 500, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            兌換獎勵
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+            {prog.rewardDescription}
+          </div>
+          <div style={{ fontSize: 12, color: '#94A3B8' }}>
+            累計獲得 {card?.totalEarned ?? 0} 點
+          </div>
+        </div>
+
+        {/* Redeem button */}
+        {stamps >= required && (
+          <button
+            onClick={handleRedeem}
+            style={{
+              width: '100%',
+              height: 52,
+              borderRadius: 14,
+              background: '#7C3AED',
+              color: '#FFFFFF',
+              border: 'none',
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: FONT,
+              marginBottom: 12,
+            }}
+          >
+            立即兌換獎勵
+          </button>
+        )}
+
+        {/* Success/error message */}
+        {msg && (
+          <div style={{
+            textAlign: 'center',
+            marginTop: 8,
+          }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '6px 16px',
+              borderRadius: 999,
+              fontSize: 13,
+              fontWeight: 600,
+              background: msgType === 'success' ? '#D1FAE5' : '#FEE2E2',
+              color: msgType === 'success' ? '#065F46' : '#991B1B',
+            }}>
+              {msg}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { padding: 20, maxWidth: 400, margin: '0 auto', fontFamily: 'sans-serif' },
-  center: { padding: 40, textAlign: 'center', color: '#888' },
-  title: { textAlign: 'center', color: '#27ACB2', marginBottom: 16 },
-  tabs: { display: 'flex', gap: 8, marginBottom: 16 },
-  tab: { flex: 1, padding: '8px 0', borderRadius: 8, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' },
-  tabActive: { background: '#27ACB2', color: '#fff', border: '1px solid #27ACB2' },
-  card: { background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' },
-  progName: { fontSize: 18, fontWeight: 700, textAlign: 'center', marginBottom: 16 },
-  stampsRow: { display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 16 },
-  stamp: { width: 36, height: 36, borderRadius: '50%', border: '2px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#ddd' },
-  stampFilled: { background: '#27ACB2', borderColor: '#27ACB2', color: '#fff' },
-  bar: { height: 8, background: '#f0f0f0', borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
-  barFill: { height: '100%', background: '#27ACB2', transition: 'width 0.5s' },
-  stampCount: { textAlign: 'center', color: '#555', fontSize: 14 },
-  reward: { textAlign: 'center', color: '#333', marginTop: 8 },
-  total: { textAlign: 'center', color: '#aaa', fontSize: 13, marginTop: 4 },
-  btn: { display: 'block', width: '100%', marginTop: 16, padding: 14, background: '#27ACB2', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, cursor: 'pointer', fontWeight: 700 },
-};

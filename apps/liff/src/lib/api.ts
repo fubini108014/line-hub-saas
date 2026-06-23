@@ -45,6 +45,36 @@ export async function fetchSlots(
   return data;
 }
 
+export interface Booking {
+  id: string;
+  serviceName: string;
+  staffName: string;
+  bookingDate: string;
+  startTime: string;
+  status: string;
+  reviewId?: string;
+}
+
+export interface Coupon {
+  id: string;
+  title: string;
+  description?: string;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: number;
+  expiresAt?: string;
+  claimed: boolean;
+  used: boolean;
+  claimId?: string;
+}
+
+export async function fetchMyBookings(merchantId: string, lineUserId: string): Promise<Booking[]> {
+  return get(`/public/my-bookings?merchantId=${merchantId}&lineUserId=${lineUserId}`);
+}
+
+export async function fetchCoupons(merchantId: string, lineUserId: string): Promise<Coupon[]> {
+  return get(`/public/coupons?merchantId=${merchantId}&lineUserId=${lineUserId}`);
+}
+
 export async function createBooking(payload: {
   merchantId: string;
   lineUserId: string;

@@ -9,14 +9,14 @@ export class CouponsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@CurrentMerchant() merchantId: string) {
-    return this.couponsService.findAll(merchantId);
+  findAll(@CurrentMerchant() m: { id: string }) {
+    return this.couponsService.findAll(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@CurrentMerchant() merchantId: string, @Body() body: any) {
-    return this.couponsService.create(merchantId, body);
+  create(@CurrentMerchant() m: { id: string }, @Body() body: any) {
+    return this.couponsService.create(m.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -27,7 +27,7 @@ export class CouponsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('redeem/:claimId')
-  redeem(@CurrentMerchant() merchantId: string, @Param('claimId') claimId: string) {
-    return this.couponsService.redeemCoupon(merchantId, claimId);
+  redeem(@CurrentMerchant() m: { id: string }, @Param('claimId') claimId: string) {
+    return this.couponsService.redeemCoupon(m.id, claimId);
   }
 }

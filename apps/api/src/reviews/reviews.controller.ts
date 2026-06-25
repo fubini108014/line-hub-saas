@@ -9,13 +9,13 @@ export class ReviewsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@CurrentMerchant() merchantId: string) {
-    return this.reviewsService.findAll(merchantId);
+  findAll(@CurrentMerchant() m: { id: string }) {
+    return this.reviewsService.findAll(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('stats')
-  getStats(@CurrentMerchant() merchantId: string) {
-    return this.reviewsService.getStats(merchantId);
+  getStats(@CurrentMerchant() m: { id: string }) {
+    return this.reviewsService.getStats(m.id);
   }
 }

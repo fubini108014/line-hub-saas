@@ -9,44 +9,44 @@ export class LoyaltyController {
 
   @UseGuards(JwtAuthGuard)
   @Get('programs')
-  getPrograms(@CurrentMerchant() merchantId: string) {
-    return this.loyaltyService.findPrograms(merchantId);
+  getPrograms(@CurrentMerchant() m: { id: string }) {
+    return this.loyaltyService.findPrograms(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('programs')
   createProgram(
-    @CurrentMerchant() merchantId: string,
+    @CurrentMerchant() m: { id: string },
     @Body() body: { name: string; stampsRequired: number; rewardDescription: string },
   ) {
-    return this.loyaltyService.createProgram(merchantId, body);
+    return this.loyaltyService.createProgram(m.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('programs/:id')
   updateProgram(
-    @CurrentMerchant() merchantId: string,
+    @CurrentMerchant() m: { id: string },
     @Param('id') id: string,
     @Body() body: any,
   ) {
-    return this.loyaltyService.updateProgram(merchantId, id, body);
+    return this.loyaltyService.updateProgram(m.id, id, body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('stamp')
   addStamp(
-    @CurrentMerchant() merchantId: string,
+    @CurrentMerchant() m: { id: string },
     @Body() body: { lineUserId: string; programId: string; count?: number },
   ) {
-    return this.loyaltyService.addStamp(merchantId, body.lineUserId, body.programId, body.count);
+    return this.loyaltyService.addStamp(m.id, body.lineUserId, body.programId, body.count);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('redeem')
   redeem(
-    @CurrentMerchant() merchantId: string,
+    @CurrentMerchant() m: { id: string },
     @Body() body: { lineUserId: string; programId: string },
   ) {
-    return this.loyaltyService.redeem(merchantId, body.lineUserId, body.programId);
+    return this.loyaltyService.redeem(m.id, body.lineUserId, body.programId);
   }
 }

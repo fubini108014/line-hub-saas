@@ -9,26 +9,26 @@ export class QueueController {
 
   @UseGuards(JwtAuthGuard)
   @Get('today')
-  getTodaySession(@CurrentMerchant() merchantId: string) {
-    return this.queueService.getTodaySession(merchantId);
+  getTodaySession(@CurrentMerchant() m: { id: string }) {
+    return this.queueService.getTodaySession(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('open')
-  openSession(@CurrentMerchant() merchantId: string) {
-    return this.queueService.openSession(merchantId);
+  openSession(@CurrentMerchant() m: { id: string }) {
+    return this.queueService.openSession(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('close')
-  closeSession(@CurrentMerchant() merchantId: string) {
-    return this.queueService.closeSession(merchantId);
+  closeSession(@CurrentMerchant() m: { id: string }) {
+    return this.queueService.closeSession(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('call-next')
-  callNext(@CurrentMerchant() merchantId: string) {
-    return this.queueService.callNext(merchantId);
+  callNext(@CurrentMerchant() m: { id: string }) {
+    return this.queueService.callNext(m.id);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -9,14 +9,14 @@ export class FormsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@CurrentMerchant() merchantId: string) {
-    return this.formsService.findAll(merchantId);
+  findAll(@CurrentMerchant() m: { id: string }) {
+    return this.formsService.findAll(m.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@CurrentMerchant() merchantId: string, @Body() body: any) {
-    return this.formsService.create(merchantId, body);
+  create(@CurrentMerchant() m: { id: string }, @Body() body: any) {
+    return this.formsService.create(m.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -27,7 +27,7 @@ export class FormsController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/responses')
-  getResponses(@CurrentMerchant() merchantId: string, @Param('id') formId: string) {
-    return this.formsService.getResponses(merchantId, formId);
+  getResponses(@CurrentMerchant() m: { id: string }, @Param('id') formId: string) {
+    return this.formsService.getResponses(m.id, formId);
   }
 }

@@ -87,6 +87,11 @@ export class PublicController {
     return this.loyaltyService.getCard(merchantId, lineUserId, programId);
   }
 
+  @Post('loyalty/redeem')
+  redeemLoyalty(@Body() body: { merchantId: string; lineUserId: string; programId: string }) {
+    return this.loyaltyService.redeem(body.merchantId, body.lineUserId, body.programId);
+  }
+
   // ── Reviews ──────────────────────────────────────────────────────────────
   @Post('reviews')
   createReview(
@@ -114,6 +119,11 @@ export class PublicController {
     @Body() body: { merchantId: string; lineUserId: string; customerName: string; customerPhone: string; partySize?: number },
   ) {
     return this.queueService.joinQueue(body.merchantId, body.lineUserId, body);
+  }
+
+  @Post('queue/cancel')
+  cancelQueue(@Body() body: { merchantId: string; lineUserId: string; entryId: string }) {
+    return this.queueService.cancelMyEntry(body.merchantId, body.lineUserId, body.entryId);
   }
 
   // ── Coupons ───────────────────────────────────────────────────────────────

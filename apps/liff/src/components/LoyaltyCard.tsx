@@ -53,7 +53,7 @@ export function LoyaltyCard({ merchantId, lineUserId }: { merchantId: string; li
   const handleRedeem = async () => {
     if (!selected || !card) return;
     try {
-      await post('/loyalty/redeem', { lineUserId, programId: selected.id });
+      await post('/public/loyalty/redeem', { merchantId, lineUserId, programId: selected.id });
       setMsg('已成功兌換獎勵！');
       setMsgType('success');
       const updated = await get<Card>(`/public/loyalty/card?merchantId=${merchantId}&lineUserId=${lineUserId}&programId=${selected.id}`);

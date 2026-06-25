@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import liff from '@line/liff';
 
 const BASE = import.meta.env.VITE_API_URL as string;
 
@@ -93,16 +94,60 @@ export function OrderWizard({ merchantId, lineUserId }: { merchantId: string; li
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', margin: '0 0 8px', letterSpacing: '-0.02em' }}>訂單已送出！</h2>
           <p style={{ color: '#64748B', fontSize: 14, margin: '0 0 20px' }}>感謝您的訂購，請稍候取餐通知</p>
-          <div style={{ background: '#fff', border: '1px solid #EDF0F7', borderRadius: 16, padding: 20, boxShadow: '0 2px 8px rgba(15,23,42,0.06)' }}>
+          <div style={{ background: '#fff', border: '1px solid #EDF0F7', borderRadius: 16, padding: 20, boxShadow: '0 2px 8px rgba(15,23,42,0.06)', marginBottom: 24 }}>
             <p style={{ color: '#94A3B8', fontSize: 12, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>訂單編號</p>
             <p style={{ fontWeight: 900, fontSize: 22, color: '#0F172A', margin: 0, letterSpacing: '0.05em' }}>{orderNum}</p>
           </div>
-          {cart.map((i) => (
-            <div key={i.product.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #EDF0F7', fontSize: 14, color: '#334155' }}>
-              <span>{i.product.name} × {i.quantity}</span>
-              <span style={{ fontWeight: 600 }}>NT${(Number(i.product.price) * i.quantity).toLocaleString()}</span>
-            </div>
-          ))}
+          <div style={{ textAlign: 'left', marginBottom: 24, maxHeight: 180, overflowY: 'auto', borderTop: '1px solid #EDF0F7', paddingTop: 8 }}>
+            {cart.map((i) => (
+              <div key={i.product.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #EDF0F7', fontSize: 14, color: '#334155' }}>
+                <span>{i.product.name} × {i.quantity}</span>
+                <span style={{ fontWeight: 600 }}>NT${(Number(i.product.price) * i.quantity).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={() => {
+                setCart([]);
+                setNote('');
+                setPickupTime('');
+                setStep('menu');
+              }}
+              style={{
+                width: '100%',
+                height: 50,
+                borderRadius: 12,
+                border: 'none',
+                background: '#7C3AED',
+                color: '#FFFFFF',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: FONT,
+              }}
+            >
+              繼續點餐
+            </button>
+            <button
+              onClick={() => liff.closeWindow()}
+              style={{
+                width: '100%',
+                height: 46,
+                borderRadius: 12,
+                border: '1.5px solid #E2E8F0',
+                background: '#FFFFFF',
+                color: '#334155',
+                fontSize: 14.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: FONT,
+              }}
+            >
+              關閉視窗
+            </button>
+          </div>
         </div>
       </div>
     );

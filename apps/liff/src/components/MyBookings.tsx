@@ -133,7 +133,7 @@ export function MyBookings({ merchantId, lineUserId }: { merchantId: string; lin
               {/* Date row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#64748B', marginBottom: b.status === 'COMPLETED' && !b.reviewId ? 10 : 0 }}>
                 <CalendarIcon />
-                <span>{new Date(b.bookingDate).toLocaleDateString('zh-TW')}</span>
+                <span>{b.bookingDate.replace(/-/g, '/')}</span>
                 <span>{b.startTime}</span>
               </div>
 

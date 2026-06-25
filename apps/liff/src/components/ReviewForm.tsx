@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import liff from '@line/liff';
 
 const BASE = import.meta.env.VITE_API_URL as string;
 const FONT = "'Plus Jakarta Sans', -apple-system, 'PingFang TC', sans-serif";
@@ -54,10 +55,52 @@ export function ReviewForm({
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
           <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-            <span style={{ fontSize: 36 }}>✓</span>
+            <span style={{ fontSize: 36, color: '#10B981', fontWeight: 'bold' }}>✓</span>
           </div>
           <p style={{ fontSize: 20, fontWeight: 700, color: '#0F172A', marginBottom: 8, textAlign: 'center' }}>感謝您的評價！</p>
-          <p style={{ fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 1.6 }}>您的意見將幫助我們持續改善服務</p>
+          <p style={{ fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 1.6, marginBottom: 32 }}>您的意見將幫助我們持續改善服務</p>
+          
+          <div style={{ width: '100%', maxWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('type', 'my-bookings');
+                url.searchParams.delete('extra');
+                window.location.href = url.toString();
+              }}
+              style={{
+                width: '100%',
+                height: 50,
+                borderRadius: 12,
+                border: 'none',
+                background: '#7C3AED',
+                color: '#FFFFFF',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: FONT,
+              }}
+            >
+              回到我的預約
+            </button>
+            <button
+              onClick={() => liff.closeWindow()}
+              style={{
+                width: '100%',
+                height: 46,
+                borderRadius: 12,
+                border: '1.5px solid #E2E8F0',
+                background: '#FFFFFF',
+                color: '#334155',
+                fontSize: 14.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: FONT,
+              }}
+            >
+              關閉視窗
+            </button>
+          </div>
         </div>
       </div>
     );

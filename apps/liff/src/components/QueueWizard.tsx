@@ -4,7 +4,7 @@ const BASE = import.meta.env.VITE_API_URL as string;
 const FONT = "'Plus Jakarta Sans', -apple-system, 'PingFang TC', sans-serif";
 
 interface QueueStatus {
-  entry: { queueNumber: number; status: string; customerName: string };
+  entry: { id: string; queueNumber: number; status: string; customerName: string };
   aheadCount: number;
   session: { isOpen: boolean };
 }
@@ -19,17 +19,47 @@ export function QueueWizard({ merchantId, lineUserId }: { merchantId: string; li
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const loadStatus = () => {
     fetch(`${BASE}/public/queue/status?merchantId=${merchantId}&lineUserId=${lineUserId}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data) { setStatus(data); setStep('waiting'); }
+        if (data) {
+          setStatus(data);
+          setStep('waiting');
+        } else {
+          setStatus(null);
+          setStep('check');
+        }
       });
     fetch(`${BASE}/public/queue/session?merchantId=${merchantId}`)
       .then((r) => r.json())
       .then((session) => { if (session) setSessionOpen(session.isOpen); })
       .finally(() => setLoading(false));
+  };
+
+  const cancelQueueEntry = async () => {
+    if (!status?.entry?.id) return;
+    if (!window.confirm('確定要取消候位嗎？')) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`${BASE}/public/queue/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchantId, lineUserId, entryId: status.entry.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: '取消失敗' }));
+        throw new Error(err.message);
+      }
+      setStatus(null);
+      setStep('check');
+    } catch (e: any) {
+      alert(e.message || '取消失敗，請重試');
+    } finally {
+      setCancelling(false);
+    }
   };
 
   useEffect(() => { loadStatus(); }, []);
@@ -116,12 +146,33 @@ export function QueueWizard({ merchantId, lineUserId }: { merchantId: string; li
             </div>
           </div>
 
-          <button
-            onClick={loadStatus}
-            style={{ width: '100%', height: 48, background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: 14, fontSize: 15, fontWeight: 600, color: '#334155', cursor: 'pointer', fontFamily: FONT }}
-          >
-            重新整理
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={loadStatus}
+              style={{ width: '100%', height: 48, background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: 14, fontSize: 15, fontWeight: 600, color: '#334155', cursor: 'pointer', fontFamily: FONT }}
+            >
+              重新整理
+            </button>
+            <button
+              onClick={cancelQueueEntry}
+              disabled={cancelling}
+              style={{
+                width: '100%',
+                height: 48,
+                background: '#FEE2E2',
+                border: 'none',
+                borderRadius: 14,
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#EF4444',
+                cursor: cancelling ? 'not-allowed' : 'pointer',
+                fontFamily: FONT,
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {cancelling ? '取消中...' : '取消候位'}
+            </button>
+          </div>
         </div>
       </div>
     );

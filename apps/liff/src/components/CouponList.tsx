@@ -39,9 +39,14 @@ export function CouponList({ merchantId, lineUserId }: { merchantId: string; lin
         body: JSON.stringify({ merchantId, lineUserId, couponId }),
       });
       if (!res.ok) {
-        await res.json().catch(() => null);
+        const err = await res.json().catch(() => ({ message: '領取失敗' }));
+        alert(err.message || '領取失敗，請重試');
+      } else {
+        alert('領取成功！');
       }
       load();
+    } catch {
+      alert('網路連線失敗，請重試');
     } finally {
       setClaiming(null);
     }

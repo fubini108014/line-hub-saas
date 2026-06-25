@@ -21,7 +21,20 @@ export function LuckyDraw({ merchantId, lineUserId }: { merchantId: string; line
   useEffect(() => {
     fetch(`${BASE}/public/draw/active?merchantId=${merchantId}`)
       .then((r) => r.json())
-      .then((data) => { if (data) setCampaign(data); })
+      .then((data) => {
+        if (data && data.prizes) {
+          const prizes = [...data.prizes];
+          const totalProb = prizes.reduce((sum, p) => sum + Number(p.probability), 0);
+          if (totalProb < 0.9999) {
+            prizes.push({
+              id: 'no-prize',
+              name: '感謝參與',
+              probability: 1 - totalProb,
+            });
+          }
+          setCampaign({ ...data, prizes });
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -31,29 +44,55 @@ export function LuckyDraw({ merchantId, lineUserId }: { merchantId: string; line
     setResult(null);
     setError('');
 
-    const spins = 5 + Math.random() * 3;
-    const extraDeg = Math.random() * 360;
-    const finalRotation = rotation + spins * 360 + extraDeg;
-    setRotation(finalRotation);
+    try {
+      const res = await fetch(`${BASE}/public/draw/spin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchantId, lineUserId, campaignId: campaign.id }),
+      });
 
-    setTimeout(async () => {
-      try {
-        const res = await fetch(`${BASE}/public/draw/spin`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ merchantId, lineUserId, campaignId: campaign.id }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ message: '抽獎失敗' }));
-          setError(err.message);
-        } else {
-          const data: DrawResult = await res.json();
-          setResult(data);
-        }
-      } finally {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: '抽獎失敗' }));
+        setError(err.message || '抽獎失敗');
         setSpinning(false);
+        return;
       }
-    }, 4000);
+
+      const data: DrawResult = await res.json();
+      
+      const prizes = campaign.prizes;
+      const segAngle = 360 / prizes.length;
+      
+      // Determine target slice index
+      let targetIndex = -1;
+      if (data.isWinner && data.prize) {
+        targetIndex = prizes.findIndex((p) => p.name === data.prize?.name);
+      }
+      
+      // If lose or index not found, land on "感謝參與"
+      if (targetIndex === -1) {
+        targetIndex = prizes.findIndex((p) => p.id === 'no-prize');
+      }
+      
+      // Fallback
+      if (targetIndex === -1) {
+        targetIndex = prizes.length - 1;
+      }
+
+      const nextBase = Math.ceil(rotation / 360) * 360;
+      const targetDeg = 360 - (targetIndex + 0.5) * segAngle;
+      const finalRotation = nextBase + 5 * 360 + targetDeg;
+      setRotation(finalRotation);
+
+      setTimeout(() => {
+        setResult(data);
+        setSpinning(false);
+      }, 4000);
+
+    } catch (e: any) {
+      setError('網路連線失敗，請重試');
+      setSpinning(false);
+    }
   };
 
   if (loading) {

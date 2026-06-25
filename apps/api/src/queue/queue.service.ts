@@ -125,4 +125,27 @@ export class QueueService {
 
     return { entry, aheadCount, session };
   }
+
+  async cancelMyEntry(merchantId: string, lineUserId: string, entryId: string) {
+    const member = await this.prisma.member.findUnique({
+      where: { merchantId_lineUserId: { merchantId, lineUserId } },
+    });
+    if (!member) throw new NotFoundException('找不到此會員');
+
+    const entry = await this.prisma.queueEntry.findUnique({
+      where: { id: entryId },
+      include: { session: true },
+    });
+    if (!entry) throw new NotFoundException('找不到此候位紀錄');
+
+    if (entry.session.merchantId !== merchantId || entry.memberId !== member.id) {
+      throw new BadRequestException('權限不足，無法取消此候位');
+    }
+
+    return this.prisma.queueEntry.update({
+      where: { id: entryId },
+      data: { status: 'CANCELLED' },
+    });
+  }
 }
+

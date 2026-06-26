@@ -57,11 +57,20 @@ export class ReviewsService {
       where: { merchantId_lineUserId: { merchantId, lineUserId } },
     });
     if (!member) return [];
-    return this.prisma.booking.findMany({
+    const bookings = await this.prisma.booking.findMany({
       where: { merchantId, memberId: member.id },
       include: { service: true, staff: true, review: true },
       orderBy: { bookingDate: 'desc' },
       take: 20,
     });
+    return bookings.map((b) => ({
+      id: b.id,
+      serviceName: b.service.name,
+      staffName: b.staff.name,
+      bookingDate: b.bookingDate,
+      startTime: b.startTime,
+      status: b.status,
+      reviewId: b.review?.id,
+    }));
   }
 }

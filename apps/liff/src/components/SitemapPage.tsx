@@ -122,7 +122,7 @@ const FEATURES = [
 
 export function SitemapPage() {
   const [mid, setMid] = useState(() => new URLSearchParams(window.location.search).get('mid') ?? '');
-  const [uid] = useState('demo-user-001');
+  const [uid] = useState('dev-user-001');
 
   const buildUrl = (type: string) => {
     const p = new URLSearchParams({ mid, type, dev: '1', uid });

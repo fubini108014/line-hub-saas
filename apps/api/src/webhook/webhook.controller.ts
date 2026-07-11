@@ -23,9 +23,10 @@ export class WebhookController {
 
     const body = req.rawBody?.toString('utf8') ?? '';
     const channelSecret = decrypt(merchant.lineChannelSecret);
-    const expectedSig = crypto.createHmac('sha256', channelSecret).update(body).digest('base64');
+    const expectedSig = crypto.createHmac('sha256', channelSecret).update(body).digest();
+    const actualSig = Buffer.from(signature ?? '', 'base64');
 
-    if (expectedSig !== signature) {
+    if (expectedSig.length !== actualSig.length || !crypto.timingSafeEqual(expectedSig, actualSig)) {
       return { status: 'invalid_signature' };
     }
 

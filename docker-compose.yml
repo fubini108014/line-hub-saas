@@ -54,12 +54,13 @@ services:
     build:
       context: .
       dockerfile: apps/admin/Dockerfile
+      args:
+        # Baked into the client bundle at build time; must be reachable from the browser.
+        NEXT_PUBLIC_API_URL: http://localhost:3001
     container_name: linehub-admin
     restart: unless-stopped
     ports:
       - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://api:3001
     depends_on:
       - api
 

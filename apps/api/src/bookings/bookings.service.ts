@@ -28,14 +28,15 @@ export class BookingsService {
 
     // Create booking in transaction with conflict lock
     return this.prisma.$transaction(async (tx) => {
+      // Columns are camelCase in Postgres (schema has no @map), so they must be quoted.
       const conflicts = await tx.$queryRaw<{ id: string }[]>`
         SELECT id FROM bookings
-        WHERE staff_id = ${dto.staffId}
-          AND merchant_id = ${dto.merchantId}
-          AND booking_date = ${bookingDate}
+        WHERE "staffId" = ${dto.staffId}
+          AND "merchantId" = ${dto.merchantId}
+          AND "bookingDate" = ${bookingDate}::date
           AND status NOT IN ('CANCELLED')
-          AND start_time < ${endTime}
-          AND end_time > ${dto.startTime}
+          AND "startTime" < ${endTime}
+          AND "endTime" > ${dto.startTime}
         FOR UPDATE
       `;
 

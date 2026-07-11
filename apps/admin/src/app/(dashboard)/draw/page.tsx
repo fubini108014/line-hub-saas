@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface Prize { id: string; name: string; probability: number; totalCount?: number; claimedCount: number }
 interface Campaign {
@@ -27,18 +26,20 @@ export default function DrawPage() {
   const [entries, setEntries] = useState<any[]>([]);
   const [createError, setCreateError] = useState('');
 
-  const token = () => localStorage.getItem('accessToken');
-  const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
-
   const load = () => {
-    fetch(`${API}/draw/campaigns`, { headers: h() }).then((r) => r.json()).then((d) => setCampaigns(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+    api.get<Campaign[]>('/draw/campaigns')
+      .then((d) => setCampaigns(Array.isArray(d) ? d : []))
+      .catch(() => setCampaigns([]))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const loadEntries = (c: Campaign) => {
     setSelected(c);
-    fetch(`${API}/draw/campaigns/${c.id}/entries`, { headers: h() }).then((r) => r.json()).then((d) => setEntries(Array.isArray(d) ? d : []));
+    api.get<any[]>(`/draw/campaigns/${c.id}/entries`)
+      .then((d) => setEntries(Array.isArray(d) ? d : []))
+      .catch(() => setEntries([]));
   };
 
   const create = async () => {
@@ -48,17 +49,10 @@ export default function DrawPage() {
     const emptyPrize = prizes.findIndex((p) => !p.name);
     if (emptyPrize >= 0) { setCreateError(`請填寫第 ${emptyPrize + 1} 個獎品名稱`); return; }
     try {
-      const res = await fetch(`${API}/draw/campaigns`, {
-        method: 'POST', headers: h(),
-        body: JSON.stringify({
-          ...form,
-          prizes: prizes.map((p) => ({ name: p.name, probability: +p.probability, totalCount: p.totalCount ? +p.totalCount : null })),
-        }),
+      await api.post('/draw/campaigns', {
+        ...form,
+        prizes: prizes.map((p) => ({ name: p.name, probability: +p.probability, totalCount: p.totalCount ? +p.totalCount : null })),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `建立失敗（${res.status}）`);
-      }
       setForm({ title: '', description: '', type: 'WHEEL', startAt: '', endAt: '', maxEntriesPerMember: 1 });
       setPrizes([{ ...INIT_PRIZE }]);
       setAdding(false);

@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MerchantsModule } from './merchants/merchants.module';
@@ -23,6 +26,7 @@ import { DrawModule } from './draw/draw.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_URL ? new URL(process.env.REDIS_URL).hostname : 'localhost',
@@ -47,6 +51,8 @@ import { DrawModule } from './draw/draw.module';
     FormsModule,
     OrdersModule,
     DrawModule,
+    HealthModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

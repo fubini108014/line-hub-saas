@@ -2,9 +2,12 @@ import { Controller, Post, Param, Headers, Req, HttpCode, HttpStatus } from '@ne
 import { RawBodyRequest } from '@nestjs/common';
 import { Request } from 'express';
 import * as crypto from 'crypto';
+import { SkipThrottle } from '@nestjs/throttler';
 import { WebhookService } from './webhook.service';
 import { decrypt } from '../common/utils/crypto.util';
 
+// LINE delivers events in bursts; signature verification is the gate here, not rate limiting.
+@SkipThrottle()
 @Controller('webhook/v1')
 export class WebhookController {
   constructor(private webhookService: WebhookService) {}

@@ -2,9 +2,12 @@ import { Controller, Post, Param, Headers, Req, HttpCode, HttpStatus } from '@ne
 import { RawBodyRequest } from '@nestjs/common';
 import { Request } from 'express';
 import * as crypto from 'crypto';
+import { SkipThrottle } from '@nestjs/throttler';
 import { WebhookService } from './webhook.service';
 import { decrypt } from '../common/utils/crypto.util';
 
+// LINE delivers events in bursts; signature verification is the gate here, not rate limiting.
+@SkipThrottle()
 @Controller('webhook/v1')
 export class WebhookController {
   constructor(private webhookService: WebhookService) {}
@@ -23,9 +26,10 @@ export class WebhookController {
 
     const body = req.rawBody?.toString('utf8') ?? '';
     const channelSecret = decrypt(merchant.lineChannelSecret);
-    const expectedSig = crypto.createHmac('sha256', channelSecret).update(body).digest('base64');
+    const expectedSig = crypto.createHmac('sha256', channelSecret).update(body).digest();
+    const actualSig = Buffer.from(signature ?? '', 'base64');
 
-    if (expectedSig !== signature) {
+    if (expectedSig.length !== actualSig.length || !crypto.timingSafeEqual(expectedSig, actualSig)) {
       return { status: 'invalid_signature' };
     }
 

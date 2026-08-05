@@ -54,19 +54,19 @@ async function main() {
 
   // 2. Define Fixed UUIDs for validation and references
   const MERCHANT_ID = 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d';
-  const MEMBER_ID = 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e';
-  const DUMMY_MEMBER_ID = 'b3c4d5e6-f7a8-9b0c-1d2e-3f4a5b6c7d8e';
-  const STAFF_1_ID = 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f';
-  const STAFF_2_ID = 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a';
-  const SERVICE_1_ID = 'e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b';
-  const SERVICE_2_ID = 'f6a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1c';
-  const SERVICE_3_ID = '07b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d';
-  const PROGRAM_ID = '18c9d0e1-f2a3-4b5c-6d7e-8f9a0b1c2d3e';
-  const COUPON_1_ID = '29d0e1f2-a3b4-5c6d-7e8f-9a0b1c2d3e4f';
+  const MEMBER_ID = 'b2c3d4e5-f6a7-4b9c-8d1e-2f3a4b5c6d7e';
+  const DUMMY_MEMBER_ID = 'b3c4d5e6-f7a8-4b0c-8d2e-3f4a5b6c7d8e';
+  const STAFF_1_ID = 'c3d4e5f6-a7b8-4c0d-8e2f-3a4b5c6d7e8f';
+  const STAFF_2_ID = 'd4e5f6a7-b8c9-4d1e-8f3a-4b5c6d7e8f9a';
+  const SERVICE_1_ID = 'e5f6a7b8-c9d0-4e2f-8a4b-5c6d7e8f9a0b';
+  const SERVICE_2_ID = 'f6a7b8c9-d0e1-4f3a-8b5c-6d7e8f9a0b1c';
+  const SERVICE_3_ID = '07b8c9d0-e1f2-4a4b-8c6d-7e8f9a0b1c2d';
+  const PROGRAM_ID = '18c9d0e1-f2a3-4b5c-8d7e-8f9a0b1c2d3e';
+  const COUPON_1_ID = '29d0e1f2-a3b4-4c6d-8e8f-9a0b1c2d3e4f';
   const COUPON_2_ID = '30e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a';
   const CAMPAIGN_ID = '41f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b';
-  const CATEGORY_ID = '52a3b4c5-d6e7-8f9a-0b1c-2d3e4f5a6b7c';
-  const FORM_TEMPLATE_ID = '85d6e7f8-a9b0-1c2d-3e4f-5a6b7c8d9e0f';
+  const CATEGORY_ID = '52a3b4c5-d6e7-4f9a-8b1c-2d3e4f5a6b7c';
+  const FORM_TEMPLATE_ID = '85d6e7f8-a9b0-4c2d-8e4f-5a6b7c8d9e0f';
 
   // 3. Create Merchant
   const passwordHash = await bcrypt.hash('password123', 12);
@@ -354,7 +354,7 @@ async function main() {
 
   await prisma.product.create({
     data: {
-      id: '63b4c5d6-e7f8-9a0b-1c2d-3e4f5a6b7c8d',
+      id: '63b4c5d6-e7f8-4a0b-8c2d-3e4f5a6b7c8d',
       merchantId: MERCHANT_ID,
       categoryId: category.id,
       name: '招牌黑糖厚奶珍珠鮮奶',
@@ -367,7 +367,7 @@ async function main() {
 
   await prisma.product.create({
     data: {
-      id: '74c5d6e7-f8a9-0b1c-2d3e-4f5a6b7c8d9e',
+      id: '74c5d6e7-f8a9-4b1c-8d3e-4f5a6b7c8d9e',
       merchantId: MERCHANT_ID,
       categoryId: category.id,
       name: '黃金四季青茶 (大杯)',

@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface Program { id: string; name: string; stampsRequired: number; rewardDescription: string; isActive: boolean }
 
@@ -11,34 +10,34 @@ export default function LoyaltyPage() {
   const [adding, setAdding] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const token = () => localStorage.getItem('accessToken');
-
   const load = () => {
-    fetch(`${API}/loyalty/programs`, { headers: { Authorization: `Bearer ${token()}` } })
-      .then((r) => r.json()).then((d) => setPrograms(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+    api.get<Program[]>('/loyalty/programs')
+      .then((d) => setPrograms(Array.isArray(d) ? d : []))
+      .catch(() => setPrograms([]))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const create = async () => {
     if (!form.name || !form.rewardDescription) return;
-    await fetch(`${API}/loyalty/programs`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    setForm({ name: '', stampsRequired: 10, rewardDescription: '' });
-    setAdding(false);
-    load();
+    try {
+      await api.post('/loyalty/programs', form);
+      setForm({ name: '', stampsRequired: 10, rewardDescription: '' });
+      setAdding(false);
+      load();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   const toggle = async (p: Program) => {
-    await fetch(`${API}/loyalty/programs/${p.id}`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: !p.isActive }),
-    });
-    load();
+    try {
+      await api.patch(`/loyalty/programs/${p.id}`, { isActive: !p.isActive });
+      load();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   return (

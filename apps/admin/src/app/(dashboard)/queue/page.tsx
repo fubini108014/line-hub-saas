@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface QueueEntry { id: string; queueNumber: number; customerName: string; customerPhone: string; partySize: number; status: string; createdAt: string }
 interface Session { id: string; isOpen: boolean; currentNumber: number; entries?: QueueEntry[] }
@@ -13,23 +12,20 @@ export default function QueuePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const token = () => localStorage.getItem('accessToken');
-  const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
-
   const load = useCallback(() => {
-    fetch(`${API}/queue/today`, { headers: h() })
-      .then((r) => r.text())
-      .then((t) => setSession(t ? JSON.parse(t) : null))
+    api.get<Session | null>('/queue/today')
+      .then((d) => setSession(d || null))
+      .catch(() => setSession(null))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const openSession = () => fetch(`${API}/queue/open`, { method: 'POST', headers: h() }).then(load);
-  const closeSession = () => fetch(`${API}/queue/close`, { method: 'POST', headers: h() }).then(load);
-  const callNext = () => fetch(`${API}/queue/call-next`, { method: 'POST', headers: h() }).then(load);
+  const openSession = () => api.post('/queue/open', {}).then(load).catch((e) => alert(e.message));
+  const closeSession = () => api.post('/queue/close', {}).then(load).catch((e) => alert(e.message));
+  const callNext = () => api.post('/queue/call-next', {}).then(load).catch((e) => alert(e.message));
   const updateEntry = (id: string, status: string) =>
-    fetch(`${API}/queue/entries/${id}`, { method: 'PATCH', headers: h(), body: JSON.stringify({ status }) }).then(load);
+    api.patch(`/queue/entries/${id}`, { status }).then(load).catch((e) => alert(e.message));
 
   const waiting = session?.entries?.filter((e) => e.status === 'WAITING') ?? [];
   const called = session?.entries?.filter((e) => e.status === 'CALLED') ?? [];

@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface OrderItem { id: string; productName: string; quantity: number; unitPrice: number }
 interface Order {
@@ -34,11 +33,10 @@ export default function OrdersPage() {
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
 
-  const token = () => localStorage.getItem('accessToken');
-  const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
-
-  const loadOrders = () => fetch(`${API}/orders`, { headers: h() }).then((r) => r.json()).then((d) => setOrders(Array.isArray(d) ? d : []));
-  const loadProducts = () => fetch(`${API}/orders/products`, { headers: h() }).then((r) => r.json()).then((d) => setProducts(Array.isArray(d) ? d : []));
+  const loadOrders = () =>
+    api.get<Order[]>('/orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setOrders([]));
+  const loadProducts = () =>
+    api.get<Product[]>('/orders/products').then((d) => setProducts(Array.isArray(d) ? d : [])).catch(() => setProducts([]));
 
   useEffect(() => {
     Promise.all([loadOrders(), loadProducts()]).finally(() => setLoading(false));
@@ -47,17 +45,21 @@ export default function OrdersPage() {
   const nextStatus = async (order: Order) => {
     const next = NEXT_STATUS[order.status];
     if (!next) return;
-    await fetch(`${API}/orders/${order.id}/status`, {
-      method: 'PATCH', headers: h(), body: JSON.stringify({ status: next }),
-    });
-    loadOrders();
+    try {
+      await api.patch(`/orders/${order.id}/status`, { status: next });
+      loadOrders();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   const cancelOrder = async (id: string) => {
-    await fetch(`${API}/orders/${id}/status`, {
-      method: 'PATCH', headers: h(), body: JSON.stringify({ status: 'CANCELLED' }),
-    });
-    loadOrders();
+    try {
+      await api.patch(`/orders/${id}/status`, { status: 'CANCELLED' });
+      loadOrders();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   const addProduct = async () => {
@@ -70,25 +72,12 @@ export default function OrdersPage() {
     try {
       let categoryId: string | undefined;
       if (productForm.categoryName) {
-        const catRes = await fetch(`${API}/orders/categories`, {
-          method: 'POST', headers: h(), body: JSON.stringify({ name: productForm.categoryName }),
-        });
-        if (!catRes.ok) {
-          const err = await catRes.json().catch(() => ({}));
-          throw new Error(err.message || `分類建立失敗（${catRes.status}）`);
-        }
-        const cat = await catRes.json();
+        const cat = await api.post<{ id: string }>('/orders/categories', { name: productForm.categoryName });
         categoryId = cat.id;
       }
       const body: Record<string, unknown> = { name: productForm.name, price: +productForm.price };
       if (categoryId) body.categoryId = categoryId;
-      const res = await fetch(`${API}/orders/products`, {
-        method: 'POST', headers: h(), body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `商品新增失敗（${res.status}）`);
-      }
+      await api.post('/orders/products', body);
       setProductForm({ name: '', price: '', categoryName: '' });
       setAddSuccess('商品已新增');
       loadProducts();
@@ -98,10 +87,12 @@ export default function OrdersPage() {
   };
 
   const toggleProduct = async (p: Product) => {
-    await fetch(`${API}/orders/products/${p.id}`, {
-      method: 'PATCH', headers: h(), body: JSON.stringify({ isAvailable: !p.isAvailable }),
-    });
-    loadProducts();
+    try {
+      await api.patch(`/orders/products/${p.id}`, { isAvailable: !p.isAvailable });
+      loadProducts();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   const activeOrders = orders.filter((o) => !['COMPLETED', 'CANCELLED'].includes(o.status));

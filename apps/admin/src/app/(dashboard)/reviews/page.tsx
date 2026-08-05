@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface Review {
   id: string;
@@ -23,12 +22,13 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const h = { Authorization: `Bearer ${token}` };
     Promise.all([
-      fetch(`${API}/reviews`, { headers: h }).then((r) => r.json()),
-      fetch(`${API}/reviews/stats`, { headers: h }).then((r) => r.json()),
-    ]).then(([r, s]) => { setReviews(Array.isArray(r) ? r : []); setStats(s?.count != null ? s : null); }).finally(() => setLoading(false));
+      api.get<Review[]>('/reviews'),
+      api.get<Stats>('/reviews/stats'),
+    ])
+      .then(([r, s]) => { setReviews(Array.isArray(r) ? r : []); setStats(s?.count != null ? s : null); })
+      .catch(() => { setReviews([]); setStats(null); })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

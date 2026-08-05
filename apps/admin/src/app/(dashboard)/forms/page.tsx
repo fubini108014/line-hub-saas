@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { api } from '@/lib/api';
 
 interface FormTemplate {
   id: string;
@@ -33,11 +32,11 @@ export default function FormsPage() {
   const [fields, setFields] = useState<FormField[]>([newField()]);
   const [loading, setLoading] = useState(true);
 
-  const token = () => localStorage.getItem('accessToken');
-  const h = () => ({ Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' });
-
   const load = () => {
-    fetch(`${API}/forms`, { headers: h() }).then((r) => r.json()).then((d) => setForms(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+    api.get<FormTemplate[]>('/forms')
+      .then((d) => setForms(Array.isArray(d) ? d : []))
+      .catch(() => setForms([]))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -49,19 +48,22 @@ export default function FormsPage() {
 
   const create = async () => {
     if (!title) return;
-    await fetch(`${API}/forms`, {
-      method: 'POST', headers: h(),
-      body: JSON.stringify({ title, description: desc, fields }),
-    });
-    setTitle(''); setDesc(''); setFields([newField()]); setAdding(false);
-    load();
+    try {
+      await api.post('/forms', { title, description: desc, fields });
+      setTitle(''); setDesc(''); setFields([newField()]); setAdding(false);
+      load();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   const toggle = async (f: FormTemplate) => {
-    await fetch(`${API}/forms/${f.id}`, {
-      method: 'PATCH', headers: h(), body: JSON.stringify({ isActive: !f.isActive }),
-    });
-    load();
+    try {
+      await api.patch(`/forms/${f.id}`, { isActive: !f.isActive });
+      load();
+    } catch (e) {
+      alert((e as Error).message);
+    }
   };
 
   return (

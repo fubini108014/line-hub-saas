@@ -18,7 +18,9 @@ export default function QueuePage() {
 
   const load = useCallback(() => {
     fetch(`${API}/queue/today`, { headers: h() })
-      .then((r) => r.json()).then((d) => setSession(d || null)).finally(() => setLoading(false));
+      .then((r) => r.text())
+      .then((t) => setSession(t ? JSON.parse(t) : null))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);

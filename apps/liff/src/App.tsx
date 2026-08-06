@@ -1,6 +1,7 @@
 import liff from '@line/liff';
 import { useEffect, useState } from 'react';
 import { BookingWizard } from './components/BookingWizard';
+import { CalendarBooking } from './components/CalendarBooking';
 import { LoyaltyCard } from './components/LoyaltyCard';
 import { MyBookings } from './components/MyBookings';
 import { ReviewForm } from './components/ReviewForm';
@@ -14,6 +15,7 @@ import { SitemapPage } from './components/SitemapPage';
 
 const LIFF_TYPE_MAP: Record<string, string> = {
   booking: 'booking',
+  calendar: 'calendar',
   loyalty: 'loyalty',
   'my-bookings': 'my-bookings',
   review: 'review',
@@ -84,6 +86,8 @@ export function App() {
   const commonProps = { merchantId, lineUserId };
 
   switch (type) {
+    case 'calendar':
+      return <CalendarBooking {...commonProps} />;
     case 'loyalty':
       return <LoyaltyCard {...commonProps} />;
     case 'my-bookings':

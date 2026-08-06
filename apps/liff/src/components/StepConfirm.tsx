@@ -8,8 +8,9 @@ interface Props {
     startTime: string;
     customerName: string;
     customerPhone: string;
+    notes: string;
   };
-  onChange: (partial: { customerName?: string; customerPhone?: string }) => void;
+  onChange: (partial: { customerName?: string; customerPhone?: string; notes?: string }) => void;
   onSubmit: () => Promise<void>;
   onBack: () => void;
 }
@@ -124,6 +125,25 @@ export function StepConfirm({ data, onChange, onSubmit, onBack }: Props) {
             type="tel"
             maxLength={10}
             style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#334155',
+            marginBottom: 6,
+          }}>
+            備註（選填）
+          </label>
+          <textarea
+            value={data.notes}
+            onChange={(e) => onChange({ notes: e.target.value })}
+            placeholder="有特殊需求嗎？例如想剪的髮型、過敏資訊等"
+            maxLength={500}
+            rows={3}
+            style={{ ...inputStyle, height: 'auto', padding: '10px 12px', resize: 'vertical', fontFamily: FONT }}
           />
         </div>
       </div>

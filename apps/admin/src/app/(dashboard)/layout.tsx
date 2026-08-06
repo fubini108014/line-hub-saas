@@ -86,6 +86,19 @@ const Icon = {
       <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
     </svg>
   ),
+  calendarGrid: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2.5" /><path d="M16 2v4M8 2v4M3 10h18" />
+      <circle cx="8" cy="15" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="15" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  toggleSettings: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="5" width="22" height="7" rx="3.5" /><circle cx="8" cy="8.5" r="2" fill="currentColor" stroke="none" />
+      <rect x="1" y="15" width="22" height="7" rx="3.5" /><circle cx="16" cy="18.5" r="2" fill="currentColor" stroke="none" />
+    </svg>
+  ),
   logout: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
@@ -101,6 +114,7 @@ const Icon = {
 const MAIN_NAV = [
   { href: '/dashboard',  label: '總覽',    icon: Icon.dashboard  },
   { href: '/bookings',   label: '預約管理', icon: Icon.calendar   },
+  { href: '/booking-calendar', label: '預約日曆', icon: Icon.calendarGrid },
   { href: '/members',    label: '客戶名冊', icon: Icon.users      },
   { href: '/reviews',    label: '評價管理', icon: Icon.star       },
   { href: '/loyalty',    label: '集點卡',   icon: Icon.gift       },
@@ -116,6 +130,7 @@ const SETTINGS_NAV = [
   { href: '/settings/services', label: '服務設定',  icon: Icon.sliders },
   { href: '/settings/staff',    label: '人員設定',  icon: Icon.user    },
   { href: '/settings/hours',    label: '營業時間',  icon: Icon.clock   },
+  { href: '/settings/booking-calendar', label: '日曆預約設定', icon: Icon.toggleSettings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

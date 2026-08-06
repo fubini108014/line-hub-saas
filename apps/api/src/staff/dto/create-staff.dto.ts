@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsUUID, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsUUID, IsBoolean, MaxLength } from 'class-validator';
 
 export class CreateStaffDto {
   @IsString()
@@ -13,6 +13,10 @@ export class CreateStaffDto {
   @IsOptional()
   @IsString()
   avatarUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isBookable?: boolean;
 }
 
 export class AssignServicesDto {

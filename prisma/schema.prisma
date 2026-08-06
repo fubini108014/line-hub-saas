@@ -39,6 +39,7 @@ model Merchant {
   products          Product[]
   orders            Order[]
   drawCampaigns     DrawCampaign[]
+  calendarSettings  CalendarSettings?
 
   @@map("merchants")
 }
@@ -92,14 +93,31 @@ model Staff {
   specialty  String?
   avatarUrl  String?
   isActive   Boolean  @default(true)
+  isBookable Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  merchant      Merchant       @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  merchant      Merchant            @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   staffServices StaffService[]
   bookings      Booking[]
+  availability  StaffAvailability[]
 
   @@map("staff")
+}
+
+model StaffAvailability {
+  id               String  @id @default(uuid())
+  staffId          String
+  dayOfWeek        Int
+  useMerchantHours Boolean @default(true)
+  openTime         String  @default("09:00")
+  closeTime        String  @default("18:00")
+  isOff            Boolean @default(false)
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, dayOfWeek])
+  @@map("staff_availability")
 }
 
 model StaffService {
@@ -125,6 +143,21 @@ model BusinessHour {
 
   @@unique([merchantId, dayOfWeek])
   @@map("business_hours")
+}
+
+model CalendarSettings {
+  id                String   @id @default(uuid())
+  merchantId        String   @unique
+  enabled           Boolean  @default(true)
+  morningEndTime    String   @default("12:00")
+  afternoonEndTime  String   @default("17:00")
+  lowStockThreshold Int      @default(3)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_settings")
 }
 
 model Booking {

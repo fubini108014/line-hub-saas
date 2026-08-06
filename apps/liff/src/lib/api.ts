@@ -34,6 +34,28 @@ export async function fetchStaff(merchantId: string, serviceId: string): Promise
   return get(`/public/staff?merchantId=${merchantId}&serviceId=${serviceId}`);
 }
 
+export interface StaffOption {
+  id: string;
+  name: string;
+  specialty?: string;
+  avatarUrl: string | null;
+}
+
+export async function fetchAllStaff(merchantId: string): Promise<StaffOption[]> {
+  return get(`/public/staff?merchantId=${merchantId}`);
+}
+
+export interface CalendarSettings {
+  enabled: boolean;
+  morningEndTime: string;
+  afternoonEndTime: string;
+  lowStockThreshold: number;
+}
+
+export async function fetchCalendarSettings(merchantId: string): Promise<CalendarSettings> {
+  return get(`/public/calendar-settings?merchantId=${merchantId}`);
+}
+
 export async function fetchSlots(
   merchantId: string,
   staffId: string,
@@ -43,6 +65,47 @@ export async function fetchSlots(
   const params = new URLSearchParams({ merchantId, staffId, serviceId, date });
   const data = await get<TimeSlot[]>(`/public/availability?${params}`);
   return data;
+}
+
+export type DayStatus = 'available' | 'full' | 'closed' | 'past';
+
+export interface DayAvailabilityInfo {
+  status: DayStatus;
+  morning: boolean;
+  afternoon: boolean;
+  evening: boolean;
+}
+
+export interface DayAvailabilityItem {
+  staffId: string;
+  staffName: string;
+  avatarUrl: string | null;
+  serviceId: string;
+  serviceName: string;
+  price: number;
+  durationMinutes: number;
+  time: string;
+}
+
+export async function fetchMonthAvailability(
+  merchantId: string,
+  year: number,
+  month: number,
+  staffId?: string,
+): Promise<Record<string, DayAvailabilityInfo>> {
+  const params = new URLSearchParams({ merchantId, year: String(year), month: String(month) });
+  if (staffId) params.set('staffId', staffId);
+  return get(`/public/availability/calendar?${params}`);
+}
+
+export async function fetchDayAvailability(
+  merchantId: string,
+  date: string,
+  staffId?: string,
+): Promise<DayAvailabilityItem[]> {
+  const params = new URLSearchParams({ merchantId, date });
+  if (staffId) params.set('staffId', staffId);
+  return get(`/public/availability/day?${params}`);
 }
 
 export interface Booking {

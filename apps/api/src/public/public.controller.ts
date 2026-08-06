@@ -12,13 +12,28 @@ import { CouponsService } from '../coupons/coupons.service';
 import { FormsService } from '../forms/forms.service';
 import { OrdersService } from '../orders/orders.service';
 import { DrawService } from '../draw/draw.service';
-import { IsUUID, IsDateString } from 'class-validator';
+import { CalendarSettingsService } from '../calendar-settings/calendar-settings.service';
+import { IsUUID, IsDateString, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 
 class AvailabilityQueryDto {
   @IsUUID() merchantId: string;
   @IsUUID() staffId: string;
   @IsUUID() serviceId: string;
   @IsDateString() date: string;
+}
+
+class MonthAvailabilityQueryDto {
+  @IsUUID() merchantId: string;
+  @Type(() => Number) @IsInt() @Min(2020) @Max(2100) year: number;
+  @Type(() => Number) @IsInt() @Min(1) @Max(12) month: number;
+  @IsOptional() @IsUUID() staffId?: string;
+}
+
+class DayAvailabilityQueryDto {
+  @IsUUID() merchantId: string;
+  @IsDateString() date: string;
+  @IsOptional() @IsUUID() staffId?: string;
 }
 
 @Controller('public')
@@ -36,6 +51,7 @@ export class PublicController {
     private formsService: FormsService,
     private ordersService: OrdersService,
     private drawService: DrawService,
+    private calendarSettingsService: CalendarSettingsService,
   ) {}
 
   // ── Booking ──────────────────────────────────────────────────────────────
@@ -45,13 +61,35 @@ export class PublicController {
   }
 
   @Get('staff')
-  getStaff(@Query('merchantId') merchantId: string, @Query('serviceId') serviceId: string) {
-    return this.staffService.findByService(merchantId, serviceId);
+  getStaff(@Query('merchantId') merchantId: string, @Query('serviceId') serviceId?: string) {
+    return serviceId
+      ? this.staffService.findByService(merchantId, serviceId)
+      : this.staffService.findBookable(merchantId);
+  }
+
+  @Get('calendar-settings')
+  getCalendarSettings(@Query('merchantId') merchantId: string) {
+    return this.calendarSettingsService.getOrDefault(merchantId);
   }
 
   @Get('availability')
   getAvailability(@Query() query: AvailabilityQueryDto) {
     return this.availabilityService.getSlots(query);
+  }
+
+  @Get('availability/calendar')
+  getMonthAvailability(@Query() query: MonthAvailabilityQueryDto) {
+    return this.availabilityService.getMonthAvailability(
+      query.merchantId,
+      query.year,
+      query.month,
+      query.staffId,
+    );
+  }
+
+  @Get('availability/day')
+  getDayAvailability(@Query() query: DayAvailabilityQueryDto) {
+    return this.availabilityService.getDayAvailability(query.merchantId, query.date, query.staffId);
   }
 
   @Post('bookings')

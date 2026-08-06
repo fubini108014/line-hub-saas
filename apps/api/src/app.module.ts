@@ -22,6 +22,7 @@ import { CouponsModule } from './coupons/coupons.module';
 import { FormsModule } from './forms/forms.module';
 import { OrdersModule } from './orders/orders.module';
 import { DrawModule } from './draw/draw.module';
+import { CalendarSettingsModule } from './calendar-settings/calendar-settings.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { DrawModule } from './draw/draw.module';
     FormsModule,
     OrdersModule,
     DrawModule,
+    CalendarSettingsModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

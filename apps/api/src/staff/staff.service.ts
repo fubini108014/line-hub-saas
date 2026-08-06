@@ -44,8 +44,20 @@ export class StaffService {
       where: {
         merchantId,
         isActive: true,
+        isBookable: true,
         staffServices: { some: { serviceId } },
       },
+      include: {
+        staffServices: {
+          include: { service: { select: { id: true, name: true, durationMinutes: true } } },
+        },
+      },
+    });
+  }
+
+  findBookable(merchantId: string) {
+    return this.prisma.staff.findMany({
+      where: { merchantId, isActive: true, isBookable: true },
       include: {
         staffServices: {
           include: { service: { select: { id: true, name: true, durationMinutes: true } } },

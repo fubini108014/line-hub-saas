@@ -15,6 +15,19 @@ const FEATURES = [
     soft: '#EDE9FE',
   },
   {
+    type: 'calendar',
+    label: '預約日曆',
+    desc: '用日曆挑日期・選人員與時段',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2.5" /><path d="M16 2v4M8 2v4M3 10h18" />
+        <circle cx="8" cy="15" r="1.4" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+    color: '#DB2777',
+    soft: '#FCE7F3',
+  },
+  {
     type: 'my-bookings',
     label: '我的預約',
     desc: '查看預約紀錄・取消或更改',
